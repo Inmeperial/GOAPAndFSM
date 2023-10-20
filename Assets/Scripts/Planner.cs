@@ -37,7 +37,7 @@ public class Planner : MonoBehaviour
         var floorItems = nav.AllItems();
         var inventory = nav.AllInventories();
         var everything = nav.AllItems().Union(nav.AllInventories());
-    
+
         Check(observedState, ItemType.Entity);
         Check(observedState, ItemType.Sword);
         Check(observedState, ItemType.Enemy);
@@ -57,7 +57,7 @@ public class Planner : MonoBehaviour
         };
 
         initial.worldState.values = observedState;
-        
+
         //foreach (var item in initial.worldState.values)
         //{
         //    Debug.Log(item.Key + " ---> " + item.Value);

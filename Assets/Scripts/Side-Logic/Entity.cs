@@ -8,30 +8,31 @@ using Random = UnityEngine.Random;
 
 public class Entity : MonoBehaviour
 {
+
     #region VARIABLES
     public TextMesh lblNumber, lblId;
-	public Transform body, inventory;
-	public string initialId;
-	public Color initialColor;
+    public Transform body, inventory;
+    public string initialId;
+    public Color initialColor;
 
-	public event Action<Entity>				OnHitFloor = delegate {};
-	public event Action<Entity, Transform>	OnHitWall = delegate {};
-	public event Action<Entity, Item>		OnHitItem = delegate {};
-	public event Action<Entity, Waypoint, bool>	OnReachDestination = delegate {};
+    public event Action<Entity> OnHitFloor = delegate { };
+    public event Action<Entity, Transform> OnHitWall = delegate { };
+    public event Action<Entity, Item> OnHitItem = delegate { };
+    public event Action<Entity, Waypoint, bool> OnReachDestination = delegate { };
 
-	public List<Item> initialItems;
-	
-	List<Item> _items;
-	Vector3 _vel;
-	bool _onFloor;
-	string _label;
-	int _number;
-	Color _color;
+    public List<Item> initialItems;
 
-	public float speed = 2f;
+    List<Item> _items;
+    Vector3 _vel;
+    bool _onFloor;
+    string _label;
+    int _number;
+    Color _color;
 
-	Waypoint _gizmoRealTarget;
-	IEnumerable<Waypoint> _gizmoPath;
+    public float speed = 2f;
+
+    Waypoint _gizmoRealTarget;
+    IEnumerable<Waypoint> _gizmoPath;
 
     #region GETTERS & SETTERS
     public IEnumerable<Item> items { get { return _items; } }
@@ -137,30 +138,34 @@ public class Entity : MonoBehaviour
     #endregion
 
     #region ITEM MANAGEMENT
-    public void AddItem(Item item) {
-		_items.Add(item);
-		item.OnInventoryAdd();
-		item.transform.parent = inventory;
-		RefreshItemPositions();
-	}
+    public void AddItem(Item item)
+    {
+        _items.Add(item);
+        item.OnInventoryAdd();
+        item.transform.parent = inventory;
+        RefreshItemPositions();
+    }
 
-	public Item Removeitem(Item item) {
-		_items.Remove(item);
-		item.OnInventoryRemove();
-		item.transform.parent = null;
-		RefreshItemPositions();
-		return item;
-	}
+    public Item Removeitem(Item item)
+    {
+        _items.Remove(item);
+        item.OnInventoryRemove();
+        item.transform.parent = null;
+        RefreshItemPositions();
+        return item;
+    }
 
-	public IEnumerable<Item> RemoveAllitems() {
-		var ret = _items;
-		foreach(var item in items) {
-			item.OnInventoryRemove();
-		}
-		_items = new List<Item>();
-		RefreshItemPositions();
-		return ret;
-	}
+    public IEnumerable<Item> RemoveAllitems()
+    {
+        var ret = _items;
+        foreach (var item in items)
+        {
+            item.OnInventoryRemove();
+        }
+        _items = new List<Item>();
+        RefreshItemPositions();
+        return ret;
+    }
 
     void RefreshItemPositions()
     {
@@ -173,68 +178,77 @@ public class Entity : MonoBehaviour
     }
     #endregion
 
-    Vector3 FloorPos(MonoBehaviour b) {
-		return FloorPos(b.transform.position);
-	}
-	Vector3 FloorPos(Vector3 v) {
-		return new Vector3(v.x, 0f, v.z);
-	}
-
-	Coroutine _navCR;
-	public void GoTo(Vector3 destination) {
-		_navCR = StartCoroutine(Navigate(destination));
-	}
-
-	public void Stop() {
-		if(_navCR != null) StopCoroutine(_navCR);
-		_vel = Vector3.zero;
-	}
-
-	protected virtual IEnumerator Navigate(Vector3 destination)
+    Vector3 FloorPos(MonoBehaviour b)
     {
-		var srcWp = Navigation.instance.NearestTo(transform.position);
-		var dstWp = Navigation.instance.NearestTo(destination);
-		
-		_gizmoRealTarget = dstWp;
-		Waypoint reachedDst = srcWp;
+        return FloorPos(b.transform.position);
+    }
+    Vector3 FloorPos(Vector3 v)
+    {
+        return new Vector3(v.x, 0f, v.z);
+    }
 
-		if(srcWp != dstWp)
+    Coroutine _navCR;
+    public void GoTo(Vector3 destination)
+    {
+        _navCR = StartCoroutine(Navigate(destination));
+    }
+
+    public void Stop()
+    {
+        if (_navCR != null) StopCoroutine(_navCR);
+        _vel = Vector3.zero;
+    }
+
+    protected virtual IEnumerator Navigate(Vector3 destination)
+    {
+        var srcWp = Navigation.instance.NearestTo(transform.position);
+        var dstWp = Navigation.instance.NearestTo(destination);
+
+        _gizmoRealTarget = dstWp;
+        Waypoint reachedDst = srcWp;
+
+        if (srcWp != dstWp)
         {
-			var path = _gizmoPath = AStarNormal<Waypoint>.Run(
-				  srcWp
-				, dstWp
-				, (wa, wb) => Vector3.Distance(wa.transform.position, wb.transform.position)
-				, w => w == dstWp
-				, w =>
-					w.adyacent
-					.Select(a => new AStarNormal<Waypoint>.Arc(a, Vector3.Distance(a.transform.position, w.transform.position)))
-			);
-			if(path != null) {
-				foreach(var next in path.Select(w => FloorPos(w))) {
+            var path = _gizmoPath = AStarNormal<Waypoint>.Run(
+                  srcWp
+                , dstWp
+                , (wa, wb) => Vector3.Distance(wa.transform.position, wb.transform.position)
+                , w => w == dstWp
+                , w =>
+                    w.adyacent
+                    .Select(a => new AStarNormal<Waypoint>.Arc(a, Vector3.Distance(a.transform.position, w.transform.position)))
+            );
+            if (path != null)
+            {
+                foreach (var next in path.Select(w => FloorPos(w)))
+                {
 
-					while((next - FloorPos(this)).sqrMagnitude >= 0.05f) {
-						_vel = (next - FloorPos(this)).normalized;
-						yield return null;
-					}
-				}
-			}
-			reachedDst = path.Last();
-		}
+                    while ((next - FloorPos(this)).sqrMagnitude >= 0.05f)
+                    {
+                        _vel = (next - FloorPos(this)).normalized;
+                        yield return null;
+                    }
+                }
+            }
+            reachedDst = path.Last();
+        }
 
-		if(reachedDst == dstWp) {
-			_vel = (FloorPos(destination) - FloorPos(this)).normalized;
-			yield return new WaitUntil(() => (FloorPos(destination) - FloorPos(this)).sqrMagnitude < 0.05f);
-		}
-		
-		_vel = Vector3.zero;
-		OnReachDestination(this, reachedDst, reachedDst == dstWp);
-	}
+        if (reachedDst == dstWp)
+        {
+            _vel = (FloorPos(destination) - FloorPos(this)).normalized;
+            yield return new WaitUntil(() => (FloorPos(destination) - FloorPos(this)).sqrMagnitude < 0.05f);
+        }
 
-	void Paint(Color color) {
-		foreach(Transform xf in body)
-			xf.GetComponent<Renderer>().material.color = color;
-		lblNumber.color = new Color(1f-color.r, 1f-color.g, 1f-color.b);
-	}
+        _vel = Vector3.zero;
+        OnReachDestination(this, reachedDst, reachedDst == dstWp);
+    }
+
+    void Paint(Color color)
+    {
+        foreach (Transform xf in body)
+            xf.GetComponent<Renderer>().material.color = color;
+        lblNumber.color = new Color(1f - color.r, 1f - color.g, 1f - color.b);
+    }
 
     void OnDrawGizmos()
     {

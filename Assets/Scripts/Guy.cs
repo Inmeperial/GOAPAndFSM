@@ -114,7 +114,7 @@ public class Guy : MonoBehaviour
         };
 
         kill.OnExit += a => _ent.OnHitItem -= PerformAttack;
-        
+
         pickup.OnEnter += a => { _ent.GoTo(_target.transform.position); _ent.OnHitItem += PerformPickUp; };
         pickup.OnExit += a => _ent.OnHitItem -= PerformPickUp;
 
