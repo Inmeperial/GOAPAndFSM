@@ -1,0 +1,14 @@
+Annotations for GOAPAndFSM.
+
+Code plan:
+
+Guy.cs Awake() -> Entity.cs
+Planner.cs Plan() -> Guy.ExecutePlan()
+------
+Planner.cs Plan() ->  Goap.Execute()
+Goap.cs -> GoapAction()
+----
+
+To set Cost of actions/Movements needs to change the code in :
+	Planner.cs -> CreatePossibleActionsList()
+There change the " SetCost " from each action.
